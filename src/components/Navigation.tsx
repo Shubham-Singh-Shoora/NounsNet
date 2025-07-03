@@ -45,7 +45,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 sm:space-x-4">
             <img
-              src="/src/assets/db996353-1fad-4686-b3b5-bbc57e4b14a3_1500x500-removebg-preview.png"
+              src="/assets/db996353-1fad-4686-b3b5-bbc57e4b14a3_1500x500-removebg-preview.png"
               alt="NounsNet Logo"
               className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
             />
