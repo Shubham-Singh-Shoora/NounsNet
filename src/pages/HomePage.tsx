@@ -45,7 +45,7 @@ const AnimatedNoggles = () => {
   }, []);
 
   return (
-    <div className="w-full h-64 bg-gradient-to-br from-nouns-blue/20 to-nouns-green/20 rounded-2xl flex items-center justify-center relative overflow-hidden">
+    <div className="w-full h-48 sm:h-56 md:h-64 bg-gradient-to-br from-nouns-blue/20 to-nouns-green/20 rounded-xl sm:rounded-2xl flex items-center justify-center relative overflow-hidden">
       <motion.div
         key={currentNoggleIndex}
         initial={{
@@ -74,10 +74,10 @@ const AnimatedNoggles = () => {
         <img
           src={`/src/assets/Noggles/${nogglesImages[currentNoggleIndex]}`}
           alt="Animated Noggles"
-          className="w-32 h-32 object-contain filter drop-shadow-lg"
+          className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain filter drop-shadow-lg"
         />
 
-        {/* Floating background elements */}
+        {/* Floating background elements - reduced for mobile performance */}
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -88,7 +88,7 @@ const AnimatedNoggles = () => {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute -top-4 -right-4 w-8 h-8 bg-nouns-red/20 rounded-full"
+          className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 w-6 h-6 sm:w-8 sm:h-8 bg-nouns-red/20 rounded-full"
         />
         <motion.div
           animate={{
@@ -100,16 +100,16 @@ const AnimatedNoggles = () => {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute -bottom-2 -left-2 w-6 h-6 bg-nouns-blue/20 rounded-full"
+          className="absolute -bottom-1 sm:-bottom-2 -left-1 sm:-left-2 w-4 h-4 sm:w-6 sm:h-6 bg-nouns-blue/20 rounded-full"
         />
       </motion.div>
 
       {/* Cycling indicator */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
+      <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
         {nogglesImages.slice(0, 5).map((_, index) => (
           <motion.div
             key={index}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${(currentNoggleIndex % 5) === index ? 'bg-nouns-red' : 'bg-white/50'
+            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${(currentNoggleIndex % 5) === index ? 'bg-nouns-red' : 'bg-white/50'
               }`}
             animate={
               (currentNoggleIndex % 5) === index
@@ -160,16 +160,16 @@ const HomePage = () => {
       className="pt-20"
     >
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <section className="min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-            className="space-y-8"
+            className="space-y-6 sm:space-y-8 text-center lg:text-left"
           >
             <motion.h1
-              className="font-londrina text-6xl lg:text-8xl font-black leading-tight"
+              className="font-londrina text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black leading-tight"
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -179,7 +179,7 @@ const HomePage = () => {
               STEER THE <span className="text-nouns-blue">FUTURE</span>
             </motion.h1>
             <motion.p
-              className="text-xl text-nouns-dark-grey leading-relaxed max-w-lg"
+              className="text-base sm:text-lg md:text-xl text-nouns-dark-grey leading-relaxed max-w-lg"
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -195,7 +195,7 @@ const HomePage = () => {
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-nouns-red to-red-600 text-white px-8 py-4 rounded-xl font-pixel text-sm hover:shadow-xl transition-all duration-300 transform"
+                className="bg-gradient-to-r from-nouns-red to-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-pixel text-xs sm:text-sm hover:shadow-xl transition-all duration-300 transform"
               >
                 ENTER THE NOUNIVERSE
               </motion.button>
@@ -206,7 +206,7 @@ const HomePage = () => {
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-            className="flex justify-center"
+            className="flex justify-center mt-8 lg:mt-0"
           >
             <NounDisplay />
           </motion.div>
@@ -214,21 +214,21 @@ const HomePage = () => {
       </section>
 
       {/* What is NounsNet Section */}
-      <section className="py-24 px-6 bg-gradient-to-br from-nouns-grey to-gray-50">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-nouns-grey to-gray-50">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6 text-center lg:text-left"
           >
-            <h2 className="font-londrina text-5xl font-black text-nouns-text">
+            <h2 className="font-londrina text-3xl sm:text-4xl md:text-5xl font-black text-nouns-text">
               A UNIVERSE, <span className="text-nouns-red">DECENTRALIZED</span>.
             </h2>
-            <div className="space-y-4 text-lg text-nouns-dark-grey leading-relaxed">
+            <div className="space-y-3 sm:space-y-4 text-sm sm:text-base md:text-lg text-nouns-dark-grey leading-relaxed">
               <p>
-                NounsNet is more than a DAO—it's a living, breathing digital ecosystem
+                Nouniverse is more than a DAO—it's a living, breathing digital ecosystem
                 where creativity meets governance, and pixels become power.
               </p>
               <p>
@@ -246,12 +246,12 @@ const HomePage = () => {
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="relative"
+            className="relative mt-8 lg:mt-0"
           >
-            <div className="bg-white rounded-3xl p-8 shadow-2xl">
-              <div className="text-center mb-4">
-                <h3 className="font-londrina lg:text-2xl text-sm text-nouns-text mb-2">ICONIC NOGGLES</h3>
-                <p className="text-xs text-nouns-dark-grey">The signature glasses that define our identity</p>
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
+              <div className="text-center mb-3 sm:mb-4">
+                <h3 className="font-londrina text-lg sm:text-xl lg:text-2xl text-nouns-text mb-1 sm:mb-2">ICONIC NOGGLES</h3>
+                <p className="text-xs sm:text-sm text-nouns-dark-grey">The signature glasses that define our identity</p>
               </div>
               <AnimatedNoggles />
             </div>
@@ -260,24 +260,24 @@ const HomePage = () => {
       </section>
 
       {/* Portal Section */}
-      <section className="py-24 px-6">
+      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-12 md:mb-16"
           >
-            <h2 className="font-londrina text-5xl font-black mb-4">
+            <h2 className="font-londrina text-3xl sm:text-4xl md:text-5xl font-black mb-3 sm:mb-4">
               EXPLORE THE <span className="text-nouns-red">NOUNIVERSE</span>
             </h2>
-            <p className="text-xl text-nouns-dark-grey">
+            <p className="text-base sm:text-lg md:text-xl text-nouns-dark-grey">
               Choose your path through the Nouns ecosystem
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {portalCards.map((card, index) => (
               <motion.div
                 key={card.path}
@@ -289,14 +289,14 @@ const HomePage = () => {
                 className="group"
               >
                 <Link to={card.path}>
-                  <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform">
-                    <div className={`bg-gradient-to-br ${card.gradient} h-48 flex items-center justify-center relative overflow-hidden`}>
+                  <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform">
+                    <div className={`bg-gradient-to-br ${card.gradient} h-36 sm:h-40 md:h-48 flex items-center justify-center relative overflow-hidden`}>
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ duration: 0.3 }}
-                        className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"
+                        className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-sm"
                       >
-                        <card.icon size={32} className="text-white" />
+                        <card.icon size={28} className="text-white" />
                       </motion.div>
 
                       {/* Floating elements */}
@@ -319,11 +319,11 @@ const HomePage = () => {
                         className="absolute bottom-4 left-4 w-2 h-2 bg-white/50 rounded-full"
                       />
                     </div>
-                    <div className="p-8">
-                      <h3 className="font-pixel text-sm text-nouns-text mb-3">
+                    <div className="p-4 sm:p-6 md:p-8">
+                      <h3 className="font-pixel text-xs sm:text-sm text-nouns-text mb-2 sm:mb-3">
                         {card.title}
                       </h3>
-                      <p className="text-nouns-dark-grey mb-6 leading-relaxed">
+                      <p className="text-sm sm:text-base text-nouns-dark-grey mb-4 sm:mb-6 leading-relaxed">
                         {card.description}
                       </p>
                       <motion.div
@@ -331,7 +331,7 @@ const HomePage = () => {
                         whileHover={{ x: 4 }}
                       >
                         <span className="font-pixel text-xs mr-2">ENTER</span>
-                        <ArrowRight size={16} />
+                        <ArrowRight size={14} />
                       </motion.div>
                     </div>
                   </div>

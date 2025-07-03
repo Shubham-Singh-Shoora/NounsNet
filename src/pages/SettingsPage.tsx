@@ -72,6 +72,96 @@ const SettingsPage = () => {
     graphApi: graphApi
   });
 
+  // Connection testing states
+  const [connectionStatus, setConnectionStatus] = useState({
+    ethRpc: { status: 'unknown', testing: false },
+    graphApi: { status: 'unknown', testing: false }
+  });
+
+  // Test RPC connection
+  const testRpcConnection = async (rpcUrl: string) => {
+    if (!rpcUrl.trim()) return 'disconnected';
+
+    try {
+      const response = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'eth_blockNumber',
+          params: []
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.result ? 'connected' : 'error';
+      }
+      return 'error';
+    } catch {
+      return 'error';
+    }
+  };
+
+  // Test Graph API connection
+  const testGraphConnection = async (graphUrl: string) => {
+    if (!graphUrl.trim()) return 'disconnected';
+
+    try {
+      const response = await fetch(graphUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: '{ __schema { queryType { name } } }'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data ? 'connected' : 'error';
+      }
+      return 'error';
+    } catch {
+      return 'error';
+    }
+  };
+
+  // Test individual connection
+  const testConnection = async (type: 'ethRpc' | 'graphApi') => {
+    setConnectionStatus(prev => ({
+      ...prev,
+      [type]: { ...prev[type], testing: true }
+    }));
+
+    const url = type === 'ethRpc' ? networkSettings.ethRpc : networkSettings.graphApi;
+    const testFn = type === 'ethRpc' ? testRpcConnection : testGraphConnection;
+
+    const status = await testFn(url);
+
+    setConnectionStatus(prev => ({
+      ...prev,
+      [type]: { status, testing: false }
+    }));
+  };
+
+  // Test all connections
+  const testAllConnections = async () => {
+    await Promise.all([
+      testConnection('ethRpc'),
+      testConnection('graphApi')
+    ]);
+  };
+
+  // Auto-test connections when settings change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      testAllConnections();
+    }, 1000); // Debounce for 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [networkSettings.ethRpc, networkSettings.graphApi]);
+
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedProfile = localStorage.getItem('nounsProfile');
@@ -460,48 +550,143 @@ const SettingsPage = () => {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-pixel mb-2">ETHEREUM RPC ENDPOINT</label>
-                <input
-                  type="url"
-                  value={networkSettings.ethRpc}
-                  onChange={(e) => setNetworkSettings({ ...networkSettings, ethRpc: e.target.value })}
-                  className="w-full px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red font-mono text-sm"
-                  placeholder="https://eth-mainnet.alchemyapi.io/v2/YOUR_KEY"
-                />
-                <p className="text-xs text-nouns-dark-grey mt-2">
-                  RPC endpoint for Ethereum blockchain interactions
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-pixel">ETHEREUM RPC ENDPOINT</label>
+                  <button
+                    onClick={() => testConnection('ethRpc')}
+                    disabled={connectionStatus.ethRpc.testing}
+                    className="text-xs px-2 py-1 bg-nouns-blue text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  >
+                    {connectionStatus.ethRpc.testing ? 'Testing...' : 'Test'}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={networkSettings.ethRpc}
+                    onChange={(e) => setNetworkSettings({ ...networkSettings, ethRpc: e.target.value })}
+                    className="w-full px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red font-mono text-sm pr-10"
+                    placeholder="https://eth-mainnet.alchemyapi.io/v2/YOUR_KEY"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {connectionStatus.ethRpc.testing ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-blue"></div>
+                    ) : (
+                      <div className={`w-3 h-3 rounded-full ${connectionStatus.ethRpc.status === 'connected' ? 'bg-nouns-green' :
+                          connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
+                            'bg-gray-300'
+                        }`}></div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-nouns-dark-grey">
+                    RPC endpoint for Ethereum blockchain interactions
+                  </p>
+                  <span className={`text-xs font-pixel ${connectionStatus.ethRpc.status === 'connected' ? 'text-nouns-green' :
+                      connectionStatus.ethRpc.status === 'error' ? 'text-red-500' :
+                        'text-nouns-dark-grey'
+                    }`}>
+                    {connectionStatus.ethRpc.status === 'connected' ? 'CONNECTED' :
+                      connectionStatus.ethRpc.status === 'error' ? 'CONNECTION FAILED' :
+                        'NOT TESTED'}
+                  </span>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-pixel mb-2">GRAPH API ENDPOINT</label>
-                <input
-                  type="url"
-                  value={networkSettings.graphApi}
-                  onChange={(e) => setNetworkSettings({ ...networkSettings, graphApi: e.target.value })}
-                  className="w-full px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red font-mono text-sm"
-                  placeholder="https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph"
-                />
-                <p className="text-xs text-nouns-dark-grey mt-2">
-                  GraphQL endpoint for Nouns data queries
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-pixel">GRAPH API ENDPOINT</label>
+                  <button
+                    onClick={() => testConnection('graphApi')}
+                    disabled={connectionStatus.graphApi.testing}
+                    className="text-xs px-2 py-1 bg-nouns-blue text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  >
+                    {connectionStatus.graphApi.testing ? 'Testing...' : 'Test'}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={networkSettings.graphApi}
+                    onChange={(e) => setNetworkSettings({ ...networkSettings, graphApi: e.target.value })}
+                    className="w-full px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red font-mono text-sm pr-10"
+                    placeholder="https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {connectionStatus.graphApi.testing ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-blue"></div>
+                    ) : (
+                      <div className={`w-3 h-3 rounded-full ${connectionStatus.graphApi.status === 'connected' ? 'bg-nouns-green' :
+                          connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
+                            'bg-gray-300'
+                        }`}></div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-nouns-dark-grey">
+                    GraphQL endpoint for Nouns data queries
+                  </p>
+                  <span className={`text-xs font-pixel ${connectionStatus.graphApi.status === 'connected' ? 'text-nouns-green' :
+                      connectionStatus.graphApi.status === 'error' ? 'text-red-500' :
+                        'text-nouns-dark-grey'
+                    }`}>
+                    {connectionStatus.graphApi.status === 'connected' ? 'CONNECTED' :
+                      connectionStatus.graphApi.status === 'error' ? 'CONNECTION FAILED' :
+                        'NOT TESTED'}
+                  </span>
+                </div>
               </div>
 
               <div className="bg-white rounded-xl p-6 border border-nouns-grey">
-                <h4 className="font-pixel text-xs mb-4">CONNECTION STATUS</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-pixel text-xs">CONNECTION STATUS</h4>
+                  <button
+                    onClick={testAllConnections}
+                    disabled={connectionStatus.ethRpc.testing || connectionStatus.graphApi.testing}
+                    className="text-xs px-3 py-1 bg-nouns-green text-white rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                  >
+                    Test All
+                  </button>
+                </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Ethereum RPC</span>
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-nouns-green rounded-full"></div>
-                      <span className="text-xs text-nouns-dark-grey">Connected</span>
+                      {connectionStatus.ethRpc.testing ? (
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-nouns-blue"></div>
+                      ) : (
+                        <div className={`w-2 h-2 rounded-full ${connectionStatus.ethRpc.status === 'connected' ? 'bg-nouns-green' :
+                            connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
+                              'bg-gray-300'
+                          }`}></div>
+                      )}
+                      <span className="text-xs text-nouns-dark-grey">
+                        {connectionStatus.ethRpc.testing ? 'Testing...' :
+                          connectionStatus.ethRpc.status === 'connected' ? 'Connected' :
+                            connectionStatus.ethRpc.status === 'error' ? 'Failed' :
+                              'Unknown'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Graph API</span>
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-nouns-green rounded-full"></div>
-                      <span className="text-xs text-nouns-dark-grey">Connected</span>
+                      {connectionStatus.graphApi.testing ? (
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-nouns-blue"></div>
+                      ) : (
+                        <div className={`w-2 h-2 rounded-full ${connectionStatus.graphApi.status === 'connected' ? 'bg-nouns-green' :
+                            connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
+                              'bg-gray-300'
+                          }`}></div>
+                      )}
+                      <span className="text-xs text-nouns-dark-grey">
+                        {connectionStatus.graphApi.testing ? 'Testing...' :
+                          connectionStatus.graphApi.status === 'connected' ? 'Connected' :
+                            connectionStatus.graphApi.status === 'error' ? 'Failed' :
+                              'Unknown'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -509,13 +694,23 @@ const SettingsPage = () => {
 
               <div className="flex space-x-4">
                 <button
-                  onClick={() => setNetworkSettings({
-                    ethRpc: "https://eth-mainnet.alchemyapi.io/v2/demo",
-                    graphApi: "https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph"
-                  })}
+                  onClick={() => {
+                    const defaults = {
+                      ethRpc: import.meta.env.VITE_ETH_RPC || "https://eth-mainnet.alchemyapi.io/v2/demo",
+                      graphApi: "https://api.goldsky.com/api/public/project_cldf2o9pqtjbm49vm6ebkw02y/subgraphs/nouns-subgraph/prod/gn"
+                    };
+                    setNetworkSettings(defaults);
+                  }}
                   className="px-4 py-2 text-sm border border-nouns-grey rounded-lg hover:bg-nouns-grey transition-colors"
                 >
                   Reset to Defaults
+                </button>
+                <button
+                  onClick={testAllConnections}
+                  disabled={connectionStatus.ethRpc.testing || connectionStatus.graphApi.testing}
+                  className="px-4 py-2 text-sm bg-nouns-blue text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  Test Connections
                 </button>
                 <a
                   href="https://docs.alchemy.com/docs/alchemy-quickstart-guide"

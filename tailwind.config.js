@@ -17,6 +17,8 @@ export default {
           'green': '#059669',
           'grey': '#F7F7F7',
           'dark-grey': '#6B7280',
+          'cool-grey': '#D5D7e1',
+          'warm-grey': '#E1D7D5',
         }
       },
       animation: {

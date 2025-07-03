@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Gavel, MessageSquare, Settings } from 'lucide-react';
+import { Home, Gavel, MessageSquare, Settings, Menu, X } from 'lucide-react';
 
 // Metamask connect helper
 async function connectMetaMask(setAccount: (acc: string) => void, setError: (msg: string) => void) {
@@ -22,6 +22,7 @@ const Navigation = () => {
   const location = useLocation();
   const [account, setAccount] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/', icon: Home, label: 'HOME' },
@@ -40,18 +41,19 @@ const Navigation = () => {
       animate={{ y: 0 }}
       className="fixed top-0 left-0 right-0 z-50 bg-nouns-bg/95 backdrop-blur-sm border-b border-nouns-grey"
     >
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-4">
+          <Link to="/" className="flex items-center space-x-2 sm:space-x-4">
             <img
               src="/src/assets/db996353-1fad-4686-b3b5-bbc57e4b14a3_1500x500-removebg-preview.png"
               alt="NounsNet Logo"
-              className="w-16 h-16 object-contain"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
             />
-            <span className="font-londrina lg:text-2xl text-sm text-nouns-red">NounsNet</span>
+            <span className="font-londrina text-lg sm:text-xl lg:text-2xl text-nouns-red">Nouniverse</span>
           </Link>
 
-          <div className="flex items-center space-x-8">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             {navItems.map(({ path, icon: Icon, label }) => (
               <Link
                 key={path}
@@ -60,40 +62,108 @@ const Navigation = () => {
               >
                 <motion.div
                   whileHover={{ y: -2 }}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${location.pathname === path
+                  className={`flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg transition-all duration-200 ${location.pathname === path
                     ? 'bg-nouns-red text-white'
                     : 'text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey'
                     }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={14} />
                   <span className="font-pixel text-xs">{label}</span>
                 </motion.div>
               </Link>
             ))}
-            {/* Connect Wallet Button */}
+            {/* Desktop Connect Wallet Button */}
             <div>
               {account ? (
                 <button
-                  className="bg-nouns-blue text-white px-4 py-2 rounded-lg font-pixel text-xs"
+                  className="bg-nouns-blue text-white px-3 lg:px-4 py-2 rounded-lg font-pixel text-xs"
                   title={account}
                   onClick={() => setAccount('')}
                 >
-                  {shortAddress(account)} (Disconnect)
+                  {shortAddress(account)}
                 </button>
               ) : (
                 <button
-                  className="bg-nouns-red text-white px-4 py-2 rounded-lg font-pixel text-xs hover:bg-nouns-blue transition-all"
+                  className="bg-nouns-red text-white px-3 lg:px-4 py-2 rounded-lg font-pixel text-xs hover:bg-nouns-blue transition-all"
                   onClick={() => connectMetaMask(setAccount, setError)}
                 >
-                  CONNECT WALLET
+                  CONNECT
                 </button>
-              )}
-              {error && (
-                <div className="text-xs text-red-500 mt-1 font-pixel">{error}</div>
               )}
             </div>
           </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-lg text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey transition-all"
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="md:hidden mt-4 pb-4 border-t border-nouns-grey pt-4"
+          >
+            <div className="flex flex-col space-y-3">
+              {navItems.map(({ path, icon: Icon, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="relative group"
+                >
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${location.pathname === path
+                      ? 'bg-nouns-red text-white'
+                      : 'text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey'
+                      }`}
+                  >
+                    <Icon size={16} />
+                    <span className="font-pixel text-xs">{label}</span>
+                  </motion.div>
+                </Link>
+              ))}
+
+              {/* Mobile Connect Wallet Button */}
+              <div className="pt-2 border-t border-nouns-grey">
+                {account ? (
+                  <button
+                    className="w-full bg-nouns-blue text-white px-4 py-3 rounded-lg font-pixel text-xs flex items-center justify-center"
+                    title={account}
+                    onClick={() => {
+                      setAccount('');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    {shortAddress(account)} (Disconnect)
+                  </button>
+                ) : (
+                  <button
+                    className="w-full bg-nouns-red text-white px-4 py-3 rounded-lg font-pixel text-xs hover:bg-nouns-blue transition-all"
+                    onClick={() => {
+                      connectMetaMask(setAccount, setError);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    CONNECT WALLET
+                  </button>
+                )}
+                {error && (
+                  <div className="text-xs text-red-500 mt-2 font-pixel text-center">{error}</div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.nav>
   );
