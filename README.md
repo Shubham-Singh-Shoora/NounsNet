@@ -102,12 +102,13 @@ Nouniverse/
 │   ├── 📂 components/            # Reusable React components
 │   │   ├── Navigation.tsx        # Header navigation with mobile menu
 │   │   ├── NounDisplay.tsx       # 3D Noun showcase component
-│   │   └── ...
+│   │   └── ThemeToogle.tsx
 │   ├── 📂 pages/                 # Main application pages
 │   │   ├── HomePage.tsx          # Landing page with hero section
 │   │   ├── AuctionPage.tsx       # Live auction interface
 │   │   ├── ProposalsPage.tsx     # DAO governance portal
-│   │   └── SettingsPage.tsx      # User configuration panel
+│   │   ├── SettingsPage.tsx      # User configuration panel
+│   │   └──NotFoundPage.tsx
 │   ├── 📂 hooks/                 # Custom React hooks
 │   │   ├── useAuctionBids.ts     # Auction data management
 │   │   ├── useNounData.ts        # Noun metadata fetching
@@ -116,7 +117,8 @@ Nouniverse/
 │   │   └── ...
 │   ├── 📂 lib/                   # Utility libraries
 │   │   ├── ether.ts              # Ethereum provider setup
-│   │   └── graph.ts              # GraphQL query handling
+│   │   ├── graph.ts              # GraphQL query handling
+│   │   └── contracts             #Logical Functions form Nouns
 │   ├── 📂 config/                # Configuration files
 │   │   └── endpoint.tsx          # RPC and API endpoint management
 │   ├── App.tsx                   # Main application component
@@ -366,7 +368,7 @@ query AuctionData($nounId: String!) {
 
 - **Modern Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **Mobile Browsers**: iOS Safari 14+, Android Chrome 90+
-- **Web3 Support**: MetaMask, WalletConnect, Coinbase Wallet
+- **Web3 Support**: MetaMask, WalletConnect
 
 ## 🚀 Deployment
 
@@ -381,16 +383,18 @@ npm run preview
 
 # Analyze bundle size
 npm run analyze
+
+#Then uploaded to
+pinme upload dist/
 ```
 
 ### **Deployment Platforms**
 
 The application is optimized for deployment on:
 
-- **Vercel**: Zero-config deployment with automatic HTTPS
-- **Netlify**: Edge computing and CDN distribution
-- **AWS S3 + CloudFront**: Enterprise-scale hosting
+
 - **IPFS**: Decentralized hosting for Web3 applications
+- **PinMe** Used as tool for IPFS hosting and ENS binding
 
 ### **Environment Configuration**
 
@@ -438,12 +442,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Vite Team**: For the blazing-fast build tool
 - **Tailwind CSS**: For the utility-first styling approach
 
-## 📞 Support & Contact
-
-- **Documentation**: [Project Wiki](https://github.com/your-username/nounsnet-portal/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-username/nounsnet-portal/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/nounsnet-portal/discussions)
-- **Discord**: [Nouns DAO Discord](https://discord.gg/nouns)
 
 ---
 
@@ -451,6 +449,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Built with ❤️ for the Nouns community**
 
-[🌐 Live Demo](https://nounsnet-portal.vercel.app) • [📖 Documentation](https://docs.nounsnet.com) • [🐦 Twitter](https://twitter.com/nounsdao)
+[🌐 Live Demo](https://5iag5etu.pinit.eth.limo) • [🐦 Twitter](https://x.com/ShooraShubham/status/1936214808279539728?t=qwCpnoIC3EGfd_kWsLGOJg&s=08)
 
 </div>
