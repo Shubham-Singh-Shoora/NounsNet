@@ -368,7 +368,7 @@ const SettingsPage = () => {
             <div className="text-center mb-8">
               <div className="w-24 h-24 bg-gradient-to-br from-nouns-red to-nouns-blue rounded-full mx-auto mb-4 flex items-center justify-center">
                 <img
-                  src="/src/assets/noun-removebg-preview.png"
+                  src="/assets/noun-removebg-preview.png"
                   alt="Profile"
                   className="w-16 h-16 object-contain"
                 />
@@ -762,8 +762,8 @@ const SettingsPage = () => {
                     key={option.value}
                     onClick={() => setMode(option.value as ThemeMode)}
                     className={`p-4 rounded-lg border-2 transition-all duration-200 ${mode === option.value
-                        ? 'border-nouns-red bg-nouns-red/10 text-nouns-red'
-                        : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
+                      ? 'border-nouns-red bg-nouns-red/10 text-nouns-red'
+                      : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
                       }`}
                   >
                     <option.icon size={24} className="mx-auto mb-2" />
@@ -816,8 +816,8 @@ const SettingsPage = () => {
                     key={theme.value}
                     onClick={() => setVariant(theme.value as ThemeVariant)}
                     className={`p-4 rounded-lg border-2 transition-all duration-200 ${variant === theme.value
-                        ? 'border-nouns-red bg-nouns-red/10'
-                        : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
+                      ? 'border-nouns-red bg-nouns-red/10'
+                      : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
                       }`}
                   >
                     <div className="flex space-x-1 mb-2 justify-center">

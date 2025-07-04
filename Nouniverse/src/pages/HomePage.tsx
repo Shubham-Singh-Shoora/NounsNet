@@ -192,13 +192,15 @@ const HomePage = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.8 }}
             >
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-nouns-red to-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-pixel text-xs sm:text-sm hover:shadow-xl transition-all duration-300 transform"
-              >
-                ENTER THE NOUNIVERSE
-              </motion.button>
+              <Link to="/auction">
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-nouns-red to-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-pixel text-xs sm:text-sm hover:shadow-xl transition-all duration-300 transform"
+                >
+                  ENTER THE NOUNIVERSE
+                </motion.button>
+              </Link>
             </motion.div>
           </motion.div>
 
