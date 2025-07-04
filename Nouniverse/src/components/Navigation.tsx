@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, Gavel, MessageSquare, Settings, Menu, X } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 // Metamask connect helper
 async function connectMetaMask(setAccount: (acc: string) => void, setError: (msg: string) => void) {
@@ -39,7 +40,7 @@ const Navigation = () => {
     <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-nouns-bg/95 backdrop-blur-sm border-b border-nouns-grey"
+      className="fixed top-0 left-0 right-0 z-50 bg-nouns-bg/95 dark:bg-dark-bg/95 backdrop-blur-sm border-b border-nouns-grey dark:border-dark-border"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
@@ -64,7 +65,7 @@ const Navigation = () => {
                   whileHover={{ y: -2 }}
                   className={`flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg transition-all duration-200 ${location.pathname === path
                     ? 'bg-nouns-red text-white'
-                    : 'text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey'
+                    : 'text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text hover:bg-nouns-grey dark:hover:bg-dark-surface'
                     }`}
                 >
                   <Icon size={14} />
@@ -73,7 +74,8 @@ const Navigation = () => {
               </Link>
             ))}
             {/* Desktop Connect Wallet Button */}
-            <div>
+            <div className="flex items-center space-x-3">
+              <ThemeToggle />
               {account ? (
                 <button
                   className="bg-nouns-blue text-white px-3 lg:px-4 py-2 rounded-lg font-pixel text-xs"
@@ -97,7 +99,7 @@ const Navigation = () => {
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey transition-all"
+              className="p-2 rounded-lg text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text hover:bg-nouns-grey dark:hover:bg-dark-surface transition-all"
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -110,7 +112,7 @@ const Navigation = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden mt-4 pb-4 border-t border-nouns-grey pt-4"
+            className="md:hidden mt-4 pb-4 border-t border-nouns-grey dark:border-dark-border pt-4"
           >
             <div className="flex flex-col space-y-3">
               {navItems.map(({ path, icon: Icon, label }) => (
@@ -124,7 +126,7 @@ const Navigation = () => {
                     whileTap={{ scale: 0.95 }}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${location.pathname === path
                       ? 'bg-nouns-red text-white'
-                      : 'text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey'
+                      : 'text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text hover:bg-nouns-grey dark:hover:bg-dark-surface'
                       }`}
                   >
                     <Icon size={16} />
@@ -134,7 +136,11 @@ const Navigation = () => {
               ))}
 
               {/* Mobile Connect Wallet Button */}
-              <div className="pt-2 border-t border-nouns-grey">
+              <div className="pt-2 border-t border-nouns-grey dark:border-dark-border">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted">THEME</span>
+                  <ThemeToggle />
+                </div>
                 {account ? (
                   <button
                     className="w-full bg-nouns-blue text-white px-4 py-3 rounded-lg font-pixel text-xs flex items-center justify-center"

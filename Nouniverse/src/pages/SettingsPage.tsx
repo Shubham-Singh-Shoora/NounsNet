@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Wallet, Bell, Shield, Palette, Globe, Copy, Check, ExternalLink } from 'lucide-react';
+import { User, Wallet, Bell, Shield, Palette, Globe, Copy, Check, ExternalLink, Sun, Moon, Monitor } from 'lucide-react';
 import { useSettings } from '../config/endpoint';
+import { useTheme, type ThemeMode, type ThemeVariant } from '../contexts/ThemeContext';
 
 // Extend Window interface to include ethereum
 declare global {
@@ -42,6 +43,7 @@ const SettingsPage = () => {
 
   // Settings hooks
   const { ethRpc, graphApi, setEthRpc, setGraphApi } = useSettings();
+  const { mode, variant, actualMode, setMode, setVariant } = useTheme();
 
   // Profile state
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -336,6 +338,14 @@ const SettingsPage = () => {
       case 'network':
         saveNetworkSettings();
         break;
+      case 'appearance':
+        // Theme settings are automatically saved via the ThemeProvider
+        setSaveStatus('saving');
+        setTimeout(() => {
+          setSaveStatus('saved');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        }, 500);
+        break;
       default:
         break;
     }
@@ -573,8 +583,8 @@ const SettingsPage = () => {
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-blue"></div>
                     ) : (
                       <div className={`w-3 h-3 rounded-full ${connectionStatus.ethRpc.status === 'connected' ? 'bg-nouns-green' :
-                          connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
-                            'bg-gray-300'
+                        connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
+                          'bg-gray-300'
                         }`}></div>
                     )}
                   </div>
@@ -584,8 +594,8 @@ const SettingsPage = () => {
                     RPC endpoint for Ethereum blockchain interactions
                   </p>
                   <span className={`text-xs font-pixel ${connectionStatus.ethRpc.status === 'connected' ? 'text-nouns-green' :
-                      connectionStatus.ethRpc.status === 'error' ? 'text-red-500' :
-                        'text-nouns-dark-grey'
+                    connectionStatus.ethRpc.status === 'error' ? 'text-red-500' :
+                      'text-nouns-dark-grey'
                     }`}>
                     {connectionStatus.ethRpc.status === 'connected' ? 'CONNECTED' :
                       connectionStatus.ethRpc.status === 'error' ? 'CONNECTION FAILED' :
@@ -618,8 +628,8 @@ const SettingsPage = () => {
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-blue"></div>
                     ) : (
                       <div className={`w-3 h-3 rounded-full ${connectionStatus.graphApi.status === 'connected' ? 'bg-nouns-green' :
-                          connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
-                            'bg-gray-300'
+                        connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
+                          'bg-gray-300'
                         }`}></div>
                     )}
                   </div>
@@ -629,8 +639,8 @@ const SettingsPage = () => {
                     GraphQL endpoint for Nouns data queries
                   </p>
                   <span className={`text-xs font-pixel ${connectionStatus.graphApi.status === 'connected' ? 'text-nouns-green' :
-                      connectionStatus.graphApi.status === 'error' ? 'text-red-500' :
-                        'text-nouns-dark-grey'
+                    connectionStatus.graphApi.status === 'error' ? 'text-red-500' :
+                      'text-nouns-dark-grey'
                     }`}>
                     {connectionStatus.graphApi.status === 'connected' ? 'CONNECTED' :
                       connectionStatus.graphApi.status === 'error' ? 'CONNECTION FAILED' :
@@ -658,8 +668,8 @@ const SettingsPage = () => {
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-nouns-blue"></div>
                       ) : (
                         <div className={`w-2 h-2 rounded-full ${connectionStatus.ethRpc.status === 'connected' ? 'bg-nouns-green' :
-                            connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
-                              'bg-gray-300'
+                          connectionStatus.ethRpc.status === 'error' ? 'bg-red-500' :
+                            'bg-gray-300'
                           }`}></div>
                       )}
                       <span className="text-xs text-nouns-dark-grey">
@@ -677,8 +687,8 @@ const SettingsPage = () => {
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-nouns-blue"></div>
                       ) : (
                         <div className={`w-2 h-2 rounded-full ${connectionStatus.graphApi.status === 'connected' ? 'bg-nouns-green' :
-                            connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
-                              'bg-gray-300'
+                          connectionStatus.graphApi.status === 'error' ? 'bg-red-500' :
+                            'bg-gray-300'
                           }`}></div>
                       )}
                       <span className="text-xs text-nouns-dark-grey">
@@ -726,6 +736,194 @@ const SettingsPage = () => {
           </div>
         );
 
+      case 'appearance':
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-nouns-red/10 to-nouns-blue/10 rounded-xl p-6 border border-nouns-grey dark:border-dark-border">
+              <h3 className="font-pixel text-sm mb-4 flex items-center space-x-2">
+                <Palette size={16} />
+                <span>VISUAL PREFERENCES</span>
+              </h3>
+              <p className="text-sm text-nouns-dark-grey dark:text-dark-muted mb-4">
+                Customize your viewing experience with different themes and color schemes.
+              </p>
+            </div>
+
+            {/* Theme Mode Selection */}
+            <div className="bg-white dark:bg-dark-surface rounded-xl p-6 border border-nouns-grey dark:border-dark-border">
+              <h4 className="font-pixel text-xs mb-4">THEME MODE</h4>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: 'light', label: 'Light', icon: Sun, desc: 'Bright and clean' },
+                  { value: 'dark', label: 'Dark', icon: Moon, desc: 'Easy on the eyes' },
+                  { value: 'auto', label: 'Auto', icon: Monitor, desc: 'Follows system' }
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setMode(option.value as ThemeMode)}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${mode === option.value
+                        ? 'border-nouns-red bg-nouns-red/10 text-nouns-red'
+                        : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
+                      }`}
+                  >
+                    <option.icon size={24} className="mx-auto mb-2" />
+                    <div className="text-sm font-medium">{option.label}</div>
+                    <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">{option.desc}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 p-3 bg-nouns-grey dark:bg-dark-bg rounded-lg">
+                <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
+                  Current mode: <span className="font-medium capitalize">{actualMode}</span>
+                  {mode === 'auto' && (
+                    <span className="ml-2 text-nouns-blue">(Auto-detected)</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Theme Variant Selection */}
+            <div className="bg-white dark:bg-dark-surface rounded-xl p-6 border border-nouns-grey dark:border-dark-border">
+              <h4 className="font-pixel text-xs mb-4">COLOR SCHEME</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  {
+                    value: 'default',
+                    label: 'Nouns Original',
+                    colors: ['#D63638', '#2563EB', '#059669'],
+                    desc: 'Classic Nouns colors'
+                  },
+                  {
+                    value: 'neon',
+                    label: 'Neon Cyber',
+                    colors: ['#00FF88', '#FF0080', '#00D4FF'],
+                    desc: 'Futuristic vibes'
+                  },
+                  {
+                    value: 'warm',
+                    label: 'Warm Earth',
+                    colors: ['#D2691E', '#8B4513', '#FF6347'],
+                    desc: 'Cozy and natural'
+                  },
+                  {
+                    value: 'cool',
+                    label: 'Cool Ocean',
+                    colors: ['#4682B4', '#5F9EA0', '#00CED1'],
+                    desc: 'Calm and refreshing'
+                  }
+                ].map((theme) => (
+                  <button
+                    key={theme.value}
+                    onClick={() => setVariant(theme.value as ThemeVariant)}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${variant === theme.value
+                        ? 'border-nouns-red bg-nouns-red/10'
+                        : 'border-nouns-grey dark:border-dark-border hover:border-nouns-red/50 dark:hover:border-nouns-red/50'
+                      }`}
+                  >
+                    <div className="flex space-x-1 mb-2 justify-center">
+                      {theme.colors.map((color, index) => (
+                        <div
+                          key={index}
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-sm font-medium">{theme.label}</div>
+                    <div className="text-xs text-nouns-dark-grey dark:text-dark-muted mt-1">
+                      {theme.desc}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview Section */}
+            <div className="bg-white dark:bg-dark-surface rounded-xl p-6 border border-nouns-grey dark:border-dark-border">
+              <h4 className="font-pixel text-xs mb-4">PREVIEW</h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 bg-nouns-grey dark:bg-dark-bg rounded-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-nouns-red rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">N</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">Noun #1234</div>
+                      <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">Preview Card</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
+                    This is how content will look with your selected theme.
+                  </div>
+                </div>
+                <div className="p-4 bg-nouns-bg dark:bg-dark-bg rounded-lg border border-nouns-grey dark:border-dark-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Current Theme</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-nouns-green rounded-full"></div>
+                      <span className="text-xs text-nouns-dark-grey dark:text-dark-muted">Active</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
+                    Mode: {actualMode} | Variant: {variant}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Settings */}
+            <div className="bg-white dark:bg-dark-surface rounded-xl p-6 border border-nouns-grey dark:border-dark-border">
+              <h4 className="font-pixel text-xs mb-4">ADVANCED</h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">Reduce Motion</div>
+                    <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
+                      Minimize animations for better performance
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          document.documentElement.style.setProperty('--animation-duration', '0s');
+                        } else {
+                          document.documentElement.style.removeProperty('--animation-duration');
+                        }
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-dark-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nouns-red"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">High Contrast</div>
+                    <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
+                      Increase contrast for better accessibility
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          document.documentElement.classList.add('high-contrast');
+                        } else {
+                          document.documentElement.classList.remove('high-contrast');
+                        }
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-dark-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nouns-red"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="text-center py-12">
@@ -735,14 +933,14 @@ const SettingsPage = () => {
     }
   };
 
-  const shouldShowSaveButton = ['profile', 'notifications', 'network'].includes(activeTab);
+  const shouldShowSaveButton = ['profile', 'notifications', 'network', 'appearance'].includes(activeTab);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-nouns-bg dark:bg-dark-bg transition-colors duration-300"
     >
       <div className="max-w-7xl mx-auto px-6 py-12">
         <motion.div
@@ -766,7 +964,7 @@ const SettingsPage = () => {
             transition={{ delay: 0.2 }}
             className="lg:col-span-1"
           >
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg border border-nouns-grey dark:border-dark-border">
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -774,7 +972,7 @@ const SettingsPage = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === tab.id
                       ? 'bg-nouns-red text-white'
-                      : 'text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey'
+                      : 'text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text hover:bg-nouns-grey dark:hover:bg-dark-bg'
                       }`}
                   >
                     <tab.icon size={16} />
@@ -792,17 +990,17 @@ const SettingsPage = () => {
             transition={{ delay: 0.4 }}
             className="lg:col-span-3"
           >
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h2 className="font-pixel text-lg mb-6">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 shadow-lg border border-nouns-grey dark:border-dark-border">
+              <h2 className="font-pixel text-lg mb-6 text-nouns-text dark:text-dark-text">
                 {tabs.find(tab => tab.id === activeTab)?.label}
               </h2>
               {renderTabContent()}
 
               {shouldShowSaveButton && (
-                <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-nouns-grey">
+                <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-nouns-grey dark:border-dark-border">
                   <button
                     onClick={() => window.location.reload()}
-                    className="px-6 py-3 border border-nouns-grey rounded-lg font-pixel text-xs text-nouns-dark-grey hover:text-nouns-text transition-colors"
+                    className="px-6 py-3 border border-nouns-grey dark:border-dark-border rounded-lg font-pixel text-xs text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text transition-colors"
                   >
                     CANCEL
                   </button>

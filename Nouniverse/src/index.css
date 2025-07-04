@@ -1,3 +1,86 @@
+/* Google Fonts - must be imported before Tailwind directives */
+@import url('https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@100;300;400;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom theme variables */
+:root {
+    --animation-duration: 0.3s;
+}
+
+/* High contrast mode */
+.high-contrast {
+    --tw-shadow: 0 0 0 2px #000;
+}
+
+.high-contrast * {
+    border-color: #000 !important;
+}
+
+/* Theme transitions */
+* {
+    transition: background-color var(--animation-duration) ease,
+        border-color var(--animation-duration) ease,
+        color var(--animation-duration) ease;
+}
+
+/* Neon theme */
+.theme-neon {
+    --nouns-red: #FF0080;
+    --nouns-blue: #00D4FF;
+    --nouns-green: #00FF88;
+}
+
+.theme-neon .bg-nouns-red {
+    background-color: #FF0080 !important;
+}
+
+.theme-neon .bg-nouns-blue {
+    background-color: #00D4FF !important;
+}
+
+.theme-neon .bg-nouns-green {
+    background-color: #00FF88 !important;
+}
+
+/* Warm theme */
+.theme-warm {
+    --nouns-red: #D2691E;
+    --nouns-blue: #4682B4;
+    --nouns-green: #8B4513;
+}
+
+.theme-warm .bg-nouns-red {
+    background-color: #D2691E !important;
+}
+
+.theme-warm .bg-nouns-blue {
+    background-color: #4682B4 !important;
+}
+
+.theme-warm .bg-nouns-green {
+    background-color: #8B4513 !important;
+}
+
+/* Cool theme */
+.theme-cool {
+    --nouns-red: #4682B4;
+    --nouns-blue: #5F9EA0;
+    --nouns-green: #00CED1;
+}
+
+.theme-cool .bg-nouns-red {
+    background-color: #4682B4 !important;
+}
+
+.theme-cool .bg-nouns-blue {
+    background-color: #5F9EA0 !important;
+}
+
+.theme-cool .bg-nouns-green {
+    background-color: #00CED1 !important;
+}

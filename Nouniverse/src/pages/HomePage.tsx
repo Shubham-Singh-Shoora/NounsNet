@@ -157,7 +157,7 @@ const HomePage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-20"
+      className="pt-20 bg-nouns-bg dark:bg-dark-bg transition-colors duration-300"
     >
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center px-4 sm:px-6">
@@ -179,7 +179,7 @@ const HomePage = () => {
               STEER THE <span className="text-nouns-blue">FUTURE</span>
             </motion.h1>
             <motion.p
-              className="text-base sm:text-lg md:text-xl text-nouns-dark-grey leading-relaxed max-w-lg"
+              className="text-base sm:text-lg md:text-xl text-nouns-dark-grey dark:text-dark-muted leading-relaxed max-w-lg"
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -214,7 +214,7 @@ const HomePage = () => {
       </section>
 
       {/* What is NounsNet Section */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-nouns-grey to-gray-50">
+      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-nouns-grey to-gray-50 dark:from-dark-surface dark:to-dark-bg">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ x: -50, opacity: 0 }}
@@ -223,10 +223,10 @@ const HomePage = () => {
             transition={{ duration: 0.8 }}
             className="space-y-4 sm:space-y-6 text-center lg:text-left"
           >
-            <h2 className="font-londrina text-3xl sm:text-4xl md:text-5xl font-black text-nouns-text">
+            <h2 className="font-londrina text-3xl sm:text-4xl md:text-5xl font-black text-nouns-text dark:text-dark-text">
               A UNIVERSE, <span className="text-nouns-red">DECENTRALIZED</span>.
             </h2>
-            <div className="space-y-3 sm:space-y-4 text-sm sm:text-base md:text-lg text-nouns-dark-grey leading-relaxed">
+            <div className="space-y-3 sm:space-y-4 text-sm sm:text-base md:text-lg text-nouns-dark-grey dark:text-dark-muted leading-relaxed">
               <p>
                 Nouniverse is more than a DAO—it's a living, breathing digital ecosystem
                 where creativity meets governance, and pixels become power.
@@ -248,10 +248,10 @@ const HomePage = () => {
             transition={{ duration: 0.8 }}
             className="relative mt-8 lg:mt-0"
           >
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-nouns-grey dark:border-dark-border">
               <div className="text-center mb-3 sm:mb-4">
-                <h3 className="font-londrina text-lg sm:text-xl lg:text-2xl text-nouns-text mb-1 sm:mb-2">ICONIC NOGGLES</h3>
-                <p className="text-xs sm:text-sm text-nouns-dark-grey">The signature glasses that define our identity</p>
+                <h3 className="font-londrina text-lg sm:text-xl lg:text-2xl text-nouns-text dark:text-dark-text mb-1 sm:mb-2">ICONIC NOGGLES</h3>
+                <p className="text-xs sm:text-sm text-nouns-dark-grey dark:text-dark-muted">The signature glasses that define our identity</p>
               </div>
               <AnimatedNoggles />
             </div>
@@ -272,7 +272,7 @@ const HomePage = () => {
             <h2 className="font-londrina text-3xl sm:text-4xl md:text-5xl font-black mb-3 sm:mb-4">
               EXPLORE THE <span className="text-nouns-red">NOUNIVERSE</span>
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-nouns-dark-grey">
+            <p className="text-base sm:text-lg md:text-xl text-nouns-dark-grey dark:text-dark-muted">
               Choose your path through the Nouns ecosystem
             </p>
           </motion.div>
@@ -289,7 +289,7 @@ const HomePage = () => {
                 className="group"
               >
                 <Link to={card.path}>
-                  <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform">
+                  <div className="bg-white dark:bg-dark-surface rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform border border-nouns-grey dark:border-dark-border">
                     <div className={`bg-gradient-to-br ${card.gradient} h-36 sm:h-40 md:h-48 flex items-center justify-center relative overflow-hidden`}>
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 5 }}
@@ -320,10 +320,10 @@ const HomePage = () => {
                       />
                     </div>
                     <div className="p-4 sm:p-6 md:p-8">
-                      <h3 className="font-pixel text-xs sm:text-sm text-nouns-text mb-2 sm:mb-3">
+                      <h3 className="font-pixel text-xs sm:text-sm text-nouns-text dark:text-dark-text mb-2 sm:mb-3">
                         {card.title}
                       </h3>
-                      <p className="text-sm sm:text-base text-nouns-dark-grey mb-4 sm:mb-6 leading-relaxed">
+                      <p className="text-sm sm:text-base text-nouns-dark-grey dark:text-dark-muted mb-4 sm:mb-6 leading-relaxed">
                         {card.description}
                       </p>
                       <motion.div

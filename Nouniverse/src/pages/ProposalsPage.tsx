@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Vote, Clock, CheckCircle, XCircle, Users, Plus, X, AlertCircle, Loader } from "lucide-react";
 import { useProposals } from "../hooks/useGraph";
 import { useSettings } from "../config/endpoint";
+import { castVote as castVoteContract, createProposal as createProposalContract, checkVotingPower, getUserNouns, checkIfVoted } from "../lib/contracts";
 
 // Extend Window interface to include ethereum
 declare global {
@@ -246,11 +247,15 @@ export default function ProposalsPage() {
 
         const balanceInEth = parseInt(balance, 16) / Math.pow(10, 18);
 
+        // Get user's Nouns
+        const userNouns = await getUserNouns(accounts[0]);
+        const nounsOwned = userNouns.map(id => `#${id}`);
+
         const newWalletData = {
           address: accounts[0],
           isConnected: true,
           balance: balanceInEth.toFixed(4),
-          nounsOwned: ['#4521', '#4522', '#4523'] // Mock data - replace with actual contract call
+          nounsOwned: nounsOwned
         };
 
         setWalletData(newWalletData);
@@ -312,6 +317,13 @@ export default function ProposalsPage() {
       return;
     }
 
+    // Check if user has voting power to create proposal
+    const votingPower = await checkVotingPower(walletData.address);
+    if (votingPower === 0) {
+      alert('You need to own at least one Noun to create a proposal');
+      return;
+    }
+
     // Validate actions
     const validActions = createProposalData.actions.filter(action =>
       action.target.trim() && action.description.trim()
@@ -335,21 +347,25 @@ export default function ProposalsPage() {
       // Create description with actions
       const fullDescription = `# ${createProposalData.title}\n\n${createProposalData.description}\n\n## Actions:\n${validActions.map((action, i) => `${i + 1}. ${action.description}`).join('\n')}`;
 
-      // Log the proposal data for debugging (in real implementation, this would be sent to contract)
       console.log('Creating proposal with data:', {
         targets,
         values,
         signatures,
         calldatas,
-        description: fullDescription
+        description: fullDescription,
+        proposer: walletData.address
       });
 
-      // Here you would encode the function call and send the transaction
-      // For demo purposes, we'll simulate a successful transaction
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const txHash = await createProposalContract(
+        targets,
+        values,
+        signatures,
+        calldatas,
+        fullDescription
+      );
 
-      const mockTxHash = '0x' + Math.random().toString(16).substr(2, 64);
-      setTransactionHash(mockTxHash);
+      console.log('Proposal created successfully:', txHash);
+      setTransactionHash(txHash);
       setTransactionStatus('success');
 
       // Reset form
@@ -372,7 +388,14 @@ export default function ProposalsPage() {
     } catch (error: any) {
       console.error('Error creating proposal:', error);
       setTransactionStatus('error');
-      alert(`Failed to create proposal: ${error.message || 'Unknown error'}`);
+
+      if (error.code === 'ACTION_REJECTED') {
+        alert('Transaction was rejected by user');
+      } else if (error.message?.includes('execution reverted')) {
+        alert('Proposal creation failed: ' + (error.reason || 'Unknown contract error'));
+      } else {
+        alert(`Failed to create proposal: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsCreatingProposal(false);
     }
@@ -385,16 +408,39 @@ export default function ProposalsPage() {
       return;
     }
 
+    // Check if user has voting power
+    const votingPower = await checkVotingPower(walletData.address);
+    if (votingPower === 0) {
+      alert('You need to own at least one Noun to vote');
+      return;
+    }
+
+    // Check if user has already voted
+    const hasVoted = await checkIfVoted(selectedProposal.id, walletData.address);
+    if (hasVoted) {
+      alert('You have already voted on this proposal');
+      return;
+    }
+
     setIsVoting(true);
     setTransactionStatus('pending');
 
     try {
-      // Here you would call the contract's castVote or castVoteWithReason function
-      // For demo purposes, we'll simulate a successful vote
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Casting vote:', {
+        proposalId: selectedProposal.id,
+        support: voteSupport,
+        reason: voteReason,
+        voter: walletData.address
+      });
 
-      const mockTxHash = '0x' + Math.random().toString(16).substr(2, 64);
-      setTransactionHash(mockTxHash);
+      const txHash = await castVoteContract(
+        selectedProposal.id,
+        voteSupport,
+        voteReason.trim() || undefined
+      );
+
+      console.log('Vote cast successfully:', txHash);
+      setTransactionHash(txHash);
       setTransactionStatus('success');
 
       setTimeout(() => {
@@ -407,7 +453,14 @@ export default function ProposalsPage() {
     } catch (error: any) {
       console.error('Error casting vote:', error);
       setTransactionStatus('error');
-      alert(`Failed to cast vote: ${error.message || 'Unknown error'}`);
+
+      if (error.code === 'ACTION_REJECTED') {
+        alert('Transaction was rejected by user');
+      } else if (error.message?.includes('execution reverted')) {
+        alert('Vote failed: ' + (error.reason || 'Unknown contract error'));
+      } else {
+        alert(`Failed to cast vote: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsVoting(false);
     }
@@ -433,7 +486,7 @@ export default function ProposalsPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-nouns-bg dark:bg-dark-bg transition-colors duration-300"
     >
       <div className="max-w-7xl mx-auto px-6 py-12">
         <motion.div
@@ -444,15 +497,46 @@ export default function ProposalsPage() {
           <h1 className="font-londrina text-6xl font-black mb-4">
             THE FORUM OF <span className="text-nouns-blue">IDEAS</span>
           </h1>
-          <p className="text-xl text-nouns-dark-grey">
+          <p className="text-xl text-nouns-dark-grey dark:text-dark-muted">
             Shape the future through collective decision-making
           </p>
           {walletData.isConnected && (
-            <div className="mt-4 text-sm text-nouns-dark-grey">
+            <div className="mt-4 text-sm text-nouns-dark-grey dark:text-dark-muted">
               Connected: {walletData.address.slice(0, 6)}...{walletData.address.slice(-4)} |
               Nouns Owned: {walletData.nounsOwned.length}
             </div>
           )}
+        </motion.div>
+
+        {/* Stats Summary */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+          <div className="bg-white dark:bg-dark-surface rounded-xl p-4 text-center border border-nouns-grey dark:border-dark-border">
+            <div className="text-2xl font-londrina font-bold text-nouns-text dark:text-dark-text">{proposals.length}</div>
+            <div className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted">TOTAL</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-xl p-4 text-center border border-nouns-grey dark:border-dark-border">
+            <div className="text-2xl font-londrina font-bold text-nouns-blue">
+              {proposals.filter(p => p.status === "ACTIVE").length}
+            </div>
+            <div className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted">ACTIVE</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-xl p-4 text-center border border-nouns-grey dark:border-dark-border">
+            <div className="text-2xl font-londrina font-bold text-nouns-green">
+              {proposals.filter(p => ["SUCCEEDED", "EXECUTED", "QUEUED"].includes(p.status)).length}
+            </div>
+            <div className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted">PASSED</div>
+          </div>
+          <div className="bg-white dark:bg-dark-surface rounded-xl p-4 text-center border border-nouns-grey dark:border-dark-border">
+            <div className="text-2xl font-londrina font-bold text-nouns-red">
+              {proposals.filter(p => ["CANCELED", "DEFEATED", "EXPIRED"].includes(p.status)).length}
+            </div>
+            <div className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted">FAILED</div>
+          </div>
         </motion.div>
 
         {/* Filters */}
@@ -462,14 +546,14 @@ export default function ProposalsPage() {
           transition={{ delay: 0.2 }}
           className="flex justify-center mb-8"
         >
-          <div className="bg-white rounded-2xl p-2 shadow-lg">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl p-2 shadow-lg border border-nouns-grey dark:border-dark-border">
             {FILTERS.map(({ label, value }) => (
               <button
                 key={value}
                 onClick={() => setFilter(value)}
                 className={`px-6 py-3 rounded-xl font-pixel text-xs transition-all duration-200 ${filter === value
                   ? "bg-nouns-red text-white"
-                  : "text-nouns-dark-grey hover:text-nouns-text hover:bg-nouns-grey"
+                  : "text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text hover:bg-nouns-grey dark:hover:bg-dark-bg"
                   }`}
               >
                 {label.toUpperCase()}
@@ -480,10 +564,10 @@ export default function ProposalsPage() {
 
         {/* Proposals Grid */}
         <div className="space-y-6">
-          {loading && <div className="text-center text-nouns-dark-grey py-12">Loading proposals...</div>}
+          {loading && <div className="text-center text-nouns-dark-grey dark:text-dark-muted py-12">Loading proposals...</div>}
           {error && <div className="text-center text-red-500 py-12">{error}</div>}
           {!loading && !error && filteredProposals.length === 0 && (
-            <div className="text-center text-nouns-dark-grey py-12">No proposals found.</div>
+            <div className="text-center text-nouns-dark-grey dark:text-dark-muted py-12">No proposals found.</div>
           )}
           {filteredProposals.map((proposal, index) => (
             <motion.div
@@ -492,11 +576,11 @@ export default function ProposalsPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-nouns-grey dark:border-dark-border"
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
+                  <div className="flex items-center space-x-3 mb-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-pixel flex items-center space-x-1 ${getStatusColor(
                         proposal.status
@@ -509,45 +593,109 @@ export default function ProposalsPage() {
                           : proposal.status.toUpperCase()}
                       </span>
                     </span>
-                    <span className="text-xs text-nouns-dark-grey">
+                    <span className="text-xs text-nouns-dark-grey dark:text-dark-muted">
                       by {proposal.proposer?.id?.slice(0, 6)}...{proposal.proposer?.id?.slice(-4)}
                     </span>
+                    <span className="text-xs text-nouns-dark-grey dark:text-dark-muted">•</span>
+                    <span className="text-xs text-nouns-dark-grey dark:text-dark-muted">#{proposal.id}</span>
                   </div>
-                  <h3 className="font-londrina text-2xl font-bold mb-2">{proposal.title}</h3>
-                  <p className="text-nouns-dark-grey leading-relaxed">{proposal.description}</p>
+                  <h3 className="font-londrina text-2xl font-bold mb-3 text-nouns-text dark:text-dark-text hover:text-nouns-red transition-colors cursor-pointer"
+                    onClick={() => setSelectedProposal(selectedProposal === proposal ? null : proposal)}>
+                    {proposal.title}
+                  </h3>
+                  <p className="text-nouns-dark-grey dark:text-dark-muted leading-relaxed text-sm mb-4">
+                    {proposal.description?.length > 200
+                      ? `${proposal.description.substring(0, 200)}...`
+                      : proposal.description}
+                  </p>
+
+                  {/* Expandable Details */}
+                  {selectedProposal === proposal && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="bg-nouns-grey dark:bg-dark-bg rounded-lg p-4 mb-4"
+                    >
+                      <h4 className="font-pixel text-xs text-nouns-text dark:text-dark-text mb-2">FULL DESCRIPTION</h4>
+                      <p className="text-sm text-nouns-dark-grey dark:text-dark-muted leading-relaxed whitespace-pre-wrap">
+                        {proposal.description}
+                      </p>
+                    </motion.div>
+                  )}
                 </div>
-                <div className="text-right ml-6">
-                  <div className="text-sm text-nouns-dark-grey mb-1">
+                <div className="text-right ml-6 flex flex-col items-end space-y-2">
+                  <div className="text-sm text-nouns-dark-grey dark:text-dark-muted">
                     {proposal.status === "ACTIVE" && currentBlock
                       ? getTimeLeft(currentBlock, getEndBlock(proposal))
                       : proposal.status === "ACTIVE"
                         ? "—"
                         : "Ended"}
                   </div>
-                  <div className="font-pixel text-xs text-nouns-red">#{proposal.id}</div>
+                  {proposal.status === "ACTIVE" && (
+                    <div className="bg-nouns-blue/10 text-nouns-blue px-2 py-1 rounded text-xs font-pixel">
+                      LIVE
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                {/* Votes For */}
-                <div className="bg-green-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-pixel text-nouns-green">FOR</span>
-                    <CheckCircle className="text-nouns-green" size={16} />
-                  </div>
-                  <div className="font-londrina text-2xl font-bold text-nouns-green">{formatVotes(proposal.forVotes)}</div>
-                </div>
+                {/* Enhanced Votes Display */}
+                {(() => {
+                  const forVotes = parseFloat(proposal.forVotes) || 0;
+                  const againstVotes = parseFloat(proposal.againstVotes) || 0;
+                  const abstainVotes = parseFloat(proposal.abstainVotes) || 0;
+                  const totalVotes = forVotes + againstVotes + abstainVotes;
 
-                {/* Votes Against */}
-                <div className="bg-red-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-pixel text-nouns-red">AGAINST</span>
-                    <XCircle className="text-nouns-red" size={16} />
-                  </div>
-                  <div className="font-londrina text-2xl font-bold text-nouns-red">
-                    {formatVotes(proposal.againstVotes)}
-                  </div>
-                </div>
+                  const forPercentage = totalVotes > 0 ? (forVotes / totalVotes * 100).toFixed(1) : 0;
+                  const againstPercentage = totalVotes > 0 ? (againstVotes / totalVotes * 100).toFixed(1) : 0;
+                  const abstainPercentage = totalVotes > 0 ? (abstainVotes / totalVotes * 100).toFixed(1) : 0;
+
+                  return (
+                    <>
+                      {/* Votes For */}
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-pixel text-nouns-green">FOR</span>
+                          <CheckCircle className="text-nouns-green" size={16} />
+                        </div>
+                        <div className="font-londrina text-2xl font-bold text-nouns-green mb-1">
+                          {formatVotes(proposal.forVotes)}
+                        </div>
+                        <div className="text-xs text-nouns-green/70">
+                          {forPercentage}% of votes
+                        </div>
+                        <div className="w-full bg-green-200 dark:bg-green-800 rounded-full h-1 mt-2">
+                          <div
+                            className="bg-nouns-green h-1 rounded-full transition-all duration-300"
+                            style={{ width: `${forPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Votes Against */}
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-pixel text-nouns-red">AGAINST</span>
+                          <XCircle className="text-nouns-red" size={16} />
+                        </div>
+                        <div className="font-londrina text-2xl font-bold text-nouns-red mb-1">
+                          {formatVotes(proposal.againstVotes)}
+                        </div>
+                        <div className="text-xs text-nouns-red/70">
+                          {againstPercentage}% of votes
+                        </div>
+                        <div className="w-full bg-red-200 dark:bg-red-800 rounded-full h-1 mt-2">
+                          <div
+                            className="bg-nouns-red h-1 rounded-full transition-all duration-300"
+                            style={{ width: `${againstPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* Vote Button */}
                 <div className="flex items-center">
@@ -562,7 +710,7 @@ export default function ProposalsPage() {
                       <span>{walletData.isConnected ? 'VOTE' : 'CONNECT TO VOTE'}</span>
                     </motion.button>
                   ) : (
-                    <div className="w-full bg-nouns-grey text-nouns-dark-grey py-3 rounded-xl font-pixel text-xs text-center">
+                    <div className="w-full bg-nouns-grey dark:bg-dark-bg text-nouns-dark-grey dark:text-dark-muted py-3 rounded-xl font-pixel text-xs text-center">
                       VOTING ENDED
                     </div>
                   )}
@@ -604,15 +752,15 @@ export default function ProposalsPage() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-dark-surface rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-nouns-grey dark:border-dark-border"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-londrina text-3xl font-bold">CREATE PROPOSAL</h2>
+                  <h2 className="font-londrina text-3xl font-bold text-nouns-text dark:text-dark-text">CREATE PROPOSAL</h2>
                   {!isCreatingProposal && (
                     <button
                       onClick={() => setShowCreateModal(false)}
-                      className="text-nouns-dark-grey hover:text-nouns-text"
+                      className="text-nouns-dark-grey dark:text-dark-muted hover:text-nouns-text dark:hover:text-dark-text"
                     >
                       <X size={24} />
                     </button>
@@ -622,10 +770,10 @@ export default function ProposalsPage() {
                 {transactionStatus === 'success' ? (
                   <div className="text-center py-12">
                     <CheckCircle className="mx-auto mb-4 text-nouns-green" size={64} />
-                    <h3 className="font-londrina text-2xl font-bold mb-2">Proposal Created!</h3>
-                    <p className="text-nouns-dark-grey mb-4">Your proposal has been submitted successfully.</p>
+                    <h3 className="font-londrina text-2xl font-bold mb-2 text-nouns-text dark:text-dark-text">Proposal Created!</h3>
+                    <p className="text-nouns-dark-grey dark:text-dark-muted mb-4">Your proposal has been submitted successfully.</p>
                     {transactionHash && (
-                      <p className="text-sm text-nouns-dark-grey font-mono">
+                      <p className="text-sm text-nouns-dark-grey dark:text-dark-muted font-mono">
                         Transaction: {transactionHash.slice(0, 10)}...{transactionHash.slice(-10)}
                       </p>
                     )}
@@ -639,7 +787,7 @@ export default function ProposalsPage() {
                         type="text"
                         value={createProposalData.title}
                         onChange={(e) => setCreateProposalData({ ...createProposalData, title: e.target.value })}
-                        className="w-full px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red"
+                        className="w-full px-4 py-3 border border-nouns-grey dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red bg-white dark:bg-dark-bg text-nouns-text dark:text-dark-text"
                         placeholder="Enter proposal title"
                         disabled={isCreatingProposal}
                       />
@@ -786,8 +934,8 @@ export default function ProposalsPage() {
                         onClick={createProposal}
                         disabled={isCreatingProposal}
                         className={`px-6 py-3 rounded-lg font-pixel text-xs transition-all duration-200 flex items-center space-x-2 ${isCreatingProposal
-                            ? 'bg-nouns-dark-grey text-white cursor-not-allowed'
-                            : 'bg-nouns-red text-white hover:shadow-lg'
+                          ? 'bg-nouns-dark-grey text-white cursor-not-allowed'
+                          : 'bg-nouns-red text-white hover:shadow-lg'
                           }`}
                       >
                         {isCreatingProposal && <Loader className="animate-spin" size={16} />}
@@ -861,8 +1009,8 @@ export default function ProposalsPage() {
                           <label
                             key={value}
                             className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${voteSupport === value
-                                ? `border-${color} bg-${color} bg-opacity-10`
-                                : 'border-nouns-grey hover:border-nouns-dark-grey'
+                              ? `border-${color} bg-${color} bg-opacity-10`
+                              : 'border-nouns-grey hover:border-nouns-dark-grey'
                               }`}
                           >
                             <input
@@ -938,8 +1086,8 @@ export default function ProposalsPage() {
                         onClick={castVote}
                         disabled={isVoting}
                         className={`px-6 py-3 rounded-lg font-pixel text-xs transition-all duration-200 flex items-center space-x-2 ${isVoting
-                            ? 'bg-nouns-dark-grey text-white cursor-not-allowed'
-                            : 'bg-nouns-blue text-white hover:shadow-lg'
+                          ? 'bg-nouns-dark-grey text-white cursor-not-allowed'
+                          : 'bg-nouns-blue text-white hover:shadow-lg'
                           }`}
                       >
                         {isVoting && <Loader className="animate-spin" size={16} />}

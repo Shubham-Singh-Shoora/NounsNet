@@ -5,6 +5,7 @@ import { useNounTraits } from '../hooks/useNounTraits';
 import { useAuctionBids } from '../hooks/useAuctionBids';
 import { useNounData } from '../hooks/useNounData';
 import { ImageData } from '@nouns/assets';
+import { placeBid as placeBidContract, getUserNouns } from '../lib/contracts';
 
 
 
@@ -63,20 +64,20 @@ const getTraitColor = (traitType: string, traitId: string | number): string => {
       case 'background':
         // Get the actual color from ImageData if available
         const bgColor = bgcolors[id];
-        return bgColor ? `bg-[${bgColor}]` : 'bg-gray-100';
+        return bgColor ? `bg-[${bgColor}] dark:bg-[${bgColor}]/80` : 'bg-gray-100 dark:bg-gray-600';
       case 'body':
-        return 'bg-blue-100';
+        return 'bg-blue-100 dark:bg-blue-800/50';
       case 'accessory':
-        return 'bg-purple-100';
+        return 'bg-purple-100 dark:bg-purple-800/50';
       case 'head':
-        return 'bg-green-100';
+        return 'bg-green-100 dark:bg-green-800/50';
       case 'glasses':
-        return 'bg-yellow-100';
+        return 'bg-yellow-100 dark:bg-yellow-800/50';
       default:
-        return 'bg-gray-100';
+        return 'bg-gray-100 dark:bg-gray-600';
     }
   } catch {
-    return 'bg-gray-100';
+    return 'bg-gray-100 dark:bg-gray-600';
   }
 };
 
@@ -201,16 +202,16 @@ const TraitCard = ({
   const colorClass = traitId !== undefined ? getTraitColor(traitType, traitId) : "bg-gray-100";
 
   return (
-    <div className={`bg-white rounded-lg p-3 border-l-4 border-nouns-red ${className}`}>
+    <div className={`bg-white dark:bg-dark-surface rounded-lg p-3 border-l-4 border-nouns-red dark:border-nouns-red/80 transition-colors duration-300 ${className}`}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-pixel text-nouns-dark-grey uppercase">{label}</span>
-        <div className={`w-3 h-3 rounded-full ${colorClass} border`}></div>
+        <span className="text-xs font-pixel text-nouns-dark-grey dark:text-dark-muted uppercase">{label}</span>
+        <div className={`w-3 h-3 rounded-full ${colorClass} border border-gray-300 dark:border-gray-500`}></div>
       </div>
-      <p className="font-medium text-sm truncate" title={traitName}>
+      <p className="font-medium text-sm truncate text-nouns-text dark:text-dark-text" title={traitName}>
         {traitName}
       </p>
       {traitId !== undefined && (
-        <p className="text-xs text-nouns-dark-grey mt-1">ID: {traitId}</p>
+        <p className="text-xs text-nouns-dark-grey dark:text-dark-muted mt-1">ID: {traitId}</p>
       )}
     </div>
   );
@@ -298,11 +299,15 @@ const AuctionPage = () => {
 
         const balanceInEth = parseInt(balance, 16) / Math.pow(10, 18);
 
+        // Get user's Nouns
+        const userNouns = await getUserNouns(accounts[0]);
+        const nounsOwned = userNouns.map(id => `#${id}`);
+
         const newWalletData = {
           address: accounts[0],
           isConnected: true,
           balance: balanceInEth.toFixed(4),
-          nounsOwned: ['#4521', '#4522', '#4523'] // Mock data - replace with actual contract call
+          nounsOwned: nounsOwned
         };
 
         setWalletData(newWalletData);
@@ -337,32 +342,44 @@ const AuctionPage = () => {
       return;
     }
 
+    if (!nounId) {
+      setBidError('No active auction found');
+      return;
+    }
+
     setIsBidding(true);
     setBidError('');
 
     try {
-      // Here you would interact with the actual Nouns auction contract
-      // For demo purposes, we'll simulate a successful bid
       console.log('Placing bid:', {
         nounId,
         bidAmount: bidValue,
         bidder: walletData.address
       });
 
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setBidError('Sending transaction...');
+      const txHash = await placeBidContract(nounId, bidValue.toString());
 
-      // In a real implementation, you would:
-      // 1. Call the auction contract's createBid function
-      // 2. Wait for transaction confirmation
-      // 3. Update the UI with the new bid
+      console.log('Transaction confirmed:', txHash);
 
-      alert(`Bid of ${bidValue} ETH placed successfully! (Demo)`);
+      // Success feedback
+      setBidError('');
       setBidAmount('');
+      alert(`Bid of ${bidValue} ETH placed successfully! Transaction: ${txHash}`);
 
     } catch (error: any) {
       console.error('Error placing bid:', error);
-      setBidError(`Failed to place bid: ${error.message || 'Unknown error'}`);
+
+      // Handle different error types
+      if (error.code === 'ACTION_REJECTED') {
+        setBidError('Transaction was rejected by user');
+      } else if (error.code === 'INSUFFICIENT_FUNDS') {
+        setBidError('Insufficient funds for transaction');
+      } else if (error.message?.includes('execution reverted')) {
+        setBidError('Transaction failed: ' + (error.reason || 'Unknown contract error'));
+      } else {
+        setBidError(`Failed to place bid: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsBidding(false);
     }
@@ -379,7 +396,7 @@ const AuctionPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="pt-20 min-h-screen"
+      className="pt-20 min-h-screen bg-nouns-bg dark:bg-dark-bg transition-colors duration-300"
     >
       <div className="max-w-7xl mx-auto px-6 py-12">
         <motion.div
@@ -390,7 +407,7 @@ const AuctionPage = () => {
           <h1 className="font-londrina text-6xl font-black mb-4">
             THE <span className="text-nouns-red">AUCTION</span> HOUSE
           </h1>
-          <p className="text-xl text-nouns-dark-grey">
+          <p className="text-xl text-nouns-dark-grey dark:text-dark-muted">
             Bid on today's unique digital artifact
           </p>
         </motion.div>
@@ -403,20 +420,20 @@ const AuctionPage = () => {
             transition={{ delay: 0.2 }}
             className="space-y-6"
           >
-            <div className="bg-white rounded-3xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-dark-surface rounded-3xl p-8 shadow-xl border border-nouns-grey dark:border-dark-border">
               <div className="text-center mb-6">
-                <h2 className="font-londrina lg:text-2xl text-lg mb-2">
+                <h2 className="font-londrina lg:text-2xl text-lg mb-2 text-nouns-text dark:text-dark-text">
                   NOUN {nounId ?? "—"}
                 </h2>
-                <p className="text-nouns-dark-grey">Today's Featured Artifact</p>
+                <p className="text-nouns-dark-grey dark:text-dark-muted">Today's Featured Artifact</p>
                 {auctionLoading && (
-                  <p className="text-xs text-nouns-dark-grey mt-2">Loading auction data...</p>
+                  <p className="text-xs text-nouns-dark-grey dark:text-dark-muted mt-2">Loading auction data...</p>
                 )}
                 {auctionError && (
                   <p className="text-xs text-nouns-red mt-2">Error: {auctionError}</p>
                 )}
               </div>
-              <div className="bg-gradient-to-br from-nouns-cool-grey to-nouns-warm-grey rounded-2xl p-8">
+              <div className="bg-gradient-to-br from-nouns-cool-grey to-nouns-warm-grey dark:from-dark-surface dark:to-dark-bg rounded-2xl p-8 transition-colors duration-300">
                 <NounImage
                   nounId={nounId}
                   className="w-full h-64 object-contain  transition-transform transform hover:scale-105"
@@ -425,8 +442,8 @@ const AuctionPage = () => {
             </div>
 
             {/* Noun Traits */}
-            <div className="bg-nouns-grey rounded-2xl p-6">
-              <h3 className="font-pixel text-sm mb-4 flex items-center">
+            <div className="bg-nouns-grey dark:bg-dark-surface rounded-2xl p-6 border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
+              <h3 className="font-pixel text-sm mb-4 flex items-center text-nouns-text dark:text-dark-text">
                 <span>TRAITS</span>
                 {traitsLoading && (
                   <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-red"></div>
@@ -463,7 +480,7 @@ const AuctionPage = () => {
                   />
                 </div>
               ) : (
-                <div className="text-center text-xs text-nouns-dark-grey bg-white rounded-lg p-6">
+                <div className="text-center text-xs text-nouns-dark-grey dark:text-dark-muted bg-white dark:bg-dark-surface rounded-lg p-6 border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
                   {traitsLoading ? (
                     <div className="flex items-center justify-center space-x-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nouns-red"></div>
@@ -487,40 +504,40 @@ const AuctionPage = () => {
             className="space-y-6"
           >
             {/* Timer */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-pixel text-sm">AUCTION ENDS IN</h3>
-                <Clock className="text-nouns-red" size={20} />
+                <h3 className="font-pixel text-sm text-nouns-text dark:text-dark-text">AUCTION ENDS IN</h3>
+                <Clock className="text-nouns-red dark:text-nouns-red/90" size={20} />
               </div>
               <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="bg-nouns-grey rounded-lg p-4">
-                  <div className="font-londrina text-3xl font-black">{hours}</div>
-                  <div className="text-xs text-nouns-dark-grey">HOURS</div>
+                <div className="bg-nouns-grey dark:bg-dark-bg rounded-lg p-4 border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
+                  <div className="font-londrina text-3xl font-black text-nouns-text dark:text-dark-text">{hours}</div>
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">HOURS</div>
                 </div>
-                <div className="bg-nouns-grey rounded-lg p-4">
-                  <div className="font-londrina text-3xl font-black">{minutes}</div>
-                  <div className="text-xs text-nouns-dark-grey">MINUTES</div>
+                <div className="bg-nouns-grey dark:bg-dark-bg rounded-lg p-4 border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
+                  <div className="font-londrina text-3xl font-black text-nouns-text dark:text-dark-text">{minutes}</div>
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">MINUTES</div>
                 </div>
-                <div className="bg-nouns-grey rounded-lg p-4">
-                  <div className="font-londrina text-3xl font-black">{seconds}</div>
-                  <div className="text-xs text-nouns-dark-grey">SECONDS</div>
+                <div className="bg-nouns-grey dark:bg-dark-bg rounded-lg p-4 border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
+                  <div className="font-londrina text-3xl font-black text-nouns-text dark:text-dark-text">{seconds}</div>
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">SECONDS</div>
                 </div>
               </div>
-              {auctionLoading && <div className="text-xs text-nouns-dark-grey text-center mt-3">Loading auction...</div>}
+              {auctionLoading && <div className="text-xs text-nouns-dark-grey dark:text-dark-muted text-center mt-3">Loading auction...</div>}
               {auctionError && <div className="text-xs text-nouns-red text-center mt-3">Auction Error: {auctionError}</div>}
             </div>
 
             {/* Current Bid */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-pixel text-sm">CURRENT BID</h3>
-                <DollarSign className="text-nouns-green" size={20} />
+                <h3 className="font-pixel text-sm text-nouns-text dark:text-dark-text">CURRENT BID</h3>
+                <DollarSign className="text-nouns-green dark:text-nouns-green/90" size={20} />
               </div>
               <div className="text-center">
-                <div className="font-londrina text-5xl font-black text-nouns-red mb-2">
+                <div className="font-londrina text-5xl font-black text-nouns-red dark:text-nouns-red/90 mb-2">
                   {currentBid > 0 ? `${currentBid.toFixed(2)} ETH` : "No bids yet"}
                 </div>
-                <p className="text-nouns-dark-grey">
+                <p className="text-nouns-dark-grey dark:text-dark-muted">
                   {(bids.length > 0 && bids[0]?.bidderDisplayName)
                     ? `Top Bidder: ${bids[0].bidderDisplayName}`
                     : auction?.bidder && auction.bidder !== "0x0000000000000000000000000000000000000000"
@@ -531,11 +548,11 @@ const AuctionPage = () => {
             </div>
 
             {/* Bid Form */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-pixel text-sm">PLACE BID</h3>
+                <h3 className="font-pixel text-sm text-nouns-text dark:text-dark-text">PLACE BID</h3>
                 {walletData.isConnected && (
-                  <div className="text-xs text-nouns-dark-grey">
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted">
                     Balance: {walletData.balance} ETH
                   </div>
                 )}
@@ -548,16 +565,16 @@ const AuctionPage = () => {
                     placeholder={`Min: ${minBidAmount.toFixed(2)} ETH`}
                     value={bidAmount}
                     onChange={(e) => setBidAmount(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-nouns-grey rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red"
+                    className="flex-1 px-4 py-3 border border-nouns-grey dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-nouns-red bg-white dark:bg-dark-bg text-nouns-text dark:text-dark-text placeholder-nouns-dark-grey dark:placeholder-dark-muted transition-colors duration-300"
                     step="0.01"
                     min={minBidAmount}
                     disabled={!walletData.isConnected || isBidding}
                   />
-                  <span className="font-medium text-nouns-dark-grey">ETH</span>
+                  <span className="font-medium text-nouns-dark-grey dark:text-dark-muted">ETH</span>
                 </div>
 
                 {bidError && (
-                  <div className="text-xs text-red-500 text-center bg-red-50 p-2 rounded">
+                  <div className="text-xs text-red-500 text-center bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
                     {bidError}
                   </div>
                 )}
@@ -567,7 +584,7 @@ const AuctionPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={connectWallet}
-                    className="w-full bg-nouns-blue text-white py-4 rounded-lg font-pixel text-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                    className="w-full bg-nouns-blue hover:bg-nouns-blue/90 text-white py-4 rounded-lg font-pixel text-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
                   >
                     <span>CONNECT WALLET TO BID</span>
                   </motion.button>
@@ -578,8 +595,8 @@ const AuctionPage = () => {
                     onClick={placeBid}
                     disabled={!canBid}
                     className={`w-full py-4 rounded-lg font-pixel text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${canBid
-                      ? 'bg-nouns-red text-white hover:shadow-lg'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-nouns-red hover:bg-nouns-red/90 text-white hover:shadow-lg'
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     {isBidding ? (
@@ -596,7 +613,7 @@ const AuctionPage = () => {
                   </motion.button>
                 )}
 
-                <div className="text-xs text-nouns-dark-grey text-center">
+                <div className="text-xs text-nouns-dark-grey dark:text-dark-muted text-center">
                   {walletData.isConnected ? (
                     <>
                       Connected: {walletData.address.slice(0, 6)}...{walletData.address.slice(-4)}
@@ -611,14 +628,14 @@ const AuctionPage = () => {
             </div>
 
             {/* Bid History */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-lg border border-nouns-grey/20 dark:border-dark-border transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-pixel text-sm">BID HISTORY</h3>
-                <Users className="text-nouns-blue" size={20} />
+                <h3 className="font-pixel text-sm text-nouns-text dark:text-dark-text">BID HISTORY</h3>
+                <Users className="text-nouns-blue dark:text-nouns-blue/90" size={20} />
               </div>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {bidsLoading && (
-                  <div className="text-center text-xs text-nouns-dark-grey py-4">
+                  <div className="text-center text-xs text-nouns-dark-grey dark:text-dark-muted py-4">
                     Loading bid history...
                   </div>
                 )}
@@ -628,7 +645,7 @@ const AuctionPage = () => {
                   </div>
                 )}
                 {!bidsLoading && !bidsError && bids.length === 0 && (
-                  <div className="text-xs text-nouns-dark-grey text-center py-4">
+                  <div className="text-xs text-nouns-dark-grey dark:text-dark-muted text-center py-4">
                     {nounId ? "No bids yet for this auction" : "No auction data available"}
                   </div>
                 )}
@@ -638,22 +655,22 @@ const AuctionPage = () => {
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center justify-between py-2 border-b border-nouns-grey last:border-b-0"
+                    className="flex items-center justify-between py-2 border-b border-nouns-grey dark:border-dark-border last:border-b-0"
                   >
                     <div>
-                      <p className="font-medium text-sm">
+                      <p className="font-medium text-sm text-nouns-text dark:text-dark-text">
                         {bid.bidderDisplayName || "Unknown bidder"}
                       </p>
-                      <p className="text-xs text-nouns-dark-grey">
+                      <p className="text-xs text-nouns-dark-grey dark:text-dark-muted">
                         {bid.formattedTime || "Unknown time"}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-nouns-red">
+                      <p className="font-bold text-nouns-red dark:text-nouns-red/90">
                         {bid.formattedAmount || "0"} ETH
                       </p>
                       {idx === 0 && (
-                        <span className="text-xs text-nouns-green">Highest Bid</span>
+                        <span className="text-xs text-nouns-green dark:text-nouns-green/90">Highest Bid</span>
                       )}
                     </div>
                   </motion.div>

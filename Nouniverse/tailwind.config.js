@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -19,6 +20,35 @@ export default {
           'dark-grey': '#6B7280',
           'cool-grey': '#D5D7e1',
           'warm-grey': '#E1D7D5',
+        },
+        // Theme variations
+        'dark': {
+          'bg': '#0A0A0A',
+          'surface': '#1A1A1A',
+          'text': '#F8F8F8',
+          'muted': '#8E8E93',
+          'border': '#2C2C2E',
+        },
+        'neon': {
+          'bg': '#0F0F23',
+          'primary': '#00FF88',
+          'secondary': '#FF0080',
+          'accent': '#00D4FF',
+          'surface': '#1A1A3A',
+        },
+        'warm': {
+          'bg': '#FFF8F0',
+          'primary': '#D2691E',
+          'secondary': '#8B4513',
+          'accent': '#FF6347',
+          'surface': '#F5F5DC',
+        },
+        'cool': {
+          'bg': '#F0F8FF',
+          'primary': '#4682B4',
+          'secondary': '#5F9EA0',
+          'accent': '#00CED1',
+          'surface': '#E6F3FF',
         }
       },
       animation: {
