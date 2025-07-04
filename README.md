@@ -102,12 +102,13 @@ Nouniverse/
 │   ├── 📂 components/            # Reusable React components
 │   │   ├── Navigation.tsx        # Header navigation with mobile menu
 │   │   ├── NounDisplay.tsx       # 3D Noun showcase component
-│   │   └── ...
+│   │   └── ThemeToogle.tsx
 │   ├── 📂 pages/                 # Main application pages
 │   │   ├── HomePage.tsx          # Landing page with hero section
 │   │   ├── AuctionPage.tsx       # Live auction interface
 │   │   ├── ProposalsPage.tsx     # DAO governance portal
-│   │   └── SettingsPage.tsx      # User configuration panel
+│   │   ├── SettingsPage.tsx      # User configuration panel
+│   │   └──NotFoundPage.tsx
 │   ├── 📂 hooks/                 # Custom React hooks
 │   │   ├── useAuctionBids.ts     # Auction data management
 │   │   ├── useNounData.ts        # Noun metadata fetching
@@ -116,7 +117,8 @@ Nouniverse/
 │   │   └── ...
 │   ├── 📂 lib/                   # Utility libraries
 │   │   ├── ether.ts              # Ethereum provider setup
-│   │   └── graph.ts              # GraphQL query handling
+│   │   ├── graph.ts              # GraphQL query handling
+│   │   └── contracts             #Logical Functions form Nouns
 │   ├── 📂 config/                # Configuration files
 │   │   └── endpoint.tsx          # RPC and API endpoint management
 │   ├── App.tsx                   # Main application component
