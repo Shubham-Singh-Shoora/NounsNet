@@ -1,4 +1,4 @@
-# NounsNet Portal 🏛️
+# Nouniverse Portal 🏛️
 
 [![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -87,7 +87,7 @@ NounsNet Portal is a comprehensive decentralized application (dApp) that serves 
 ## 📁 Project Structure
 
 ```
-NounsNet/
+Nouniverse/
 ├── 📂 public/                    # Static assets and metadata
 │   ├── vite.svg                  # Default Vite favicon
 │   └── index.html                # Main HTML template
